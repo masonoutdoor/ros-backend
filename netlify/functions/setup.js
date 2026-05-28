@@ -1,5 +1,3 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -12,7 +10,24 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers, body: '' };
   }
 
+  const key = process.env.STRIPE_SECRET_KEY;
+  const keyPreview = key ? key.substring(0, 12) + '...' : 'NOT SET';
+  
+  if (!key) {
+    return { 
+      statusCode: 200, 
+      headers, 
+      body: JSON.stringify({ 
+        debug: true,
+        error: 'No Stripe key found',
+        keyPreview,
+        allEnvKeys: Object.keys(process.env).filter(k => !k.includes('npm') && !k.includes('PATH')).join(', ')
+      }) 
+    };
+  }
+
   try {
+    const stripe = require('stripe')(key);
     const { stripeCustomerId, customerName, customerEmail } = JSON.parse(event.body || '{}');
     let customerId = stripeCustomerId;
     if (!customerId) {
