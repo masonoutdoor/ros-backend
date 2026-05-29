@@ -1,7 +1,7 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Only allow your app's origin to call this function.
-const ALLOWED_ORIGIN = 'https://masonoutdoor.github.io';
+const ALLOWED_ORIGIN = 'https://richardsonoutdoorsolutions.com';
 
 exports.handler = async (event) => {
   const headers = {
