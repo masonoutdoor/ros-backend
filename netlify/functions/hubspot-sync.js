@@ -19,7 +19,6 @@ exports.handler = async (event) => {
     return { statusCode: 204, headers, body: '' };
   }
 
-  // ── AUTH GATE: reject anything without the shared secret ──
   if (event.headers['x-app-secret'] !== process.env.APP_SHARED_SECRET) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'unauthorized' }) };
   }
@@ -30,7 +29,6 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing contactId' }) };
     }
 
-    const methodLabel = method === 'cash' ? 'Cash/Check' : (method || 'Payment');
     const dateMs = jobDate ? new Date(jobDate).getTime().toString() : Date.now().toString();
 
     const res = await fetch(`https://api.hubapi.com/crm/v3/objects/contacts/${encodeURIComponent(contactId)}`, {
@@ -41,9 +39,7 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         properties: {
-          hs_lead_status: 'Connected',
-          notes_last_contacted: dateMs,
-          hs_content_membership_notes: `Last payment: $${(parseFloat(amount) || 0).toFixed(2)} via ${methodLabel} on ${jobDate || ''}`
+          notes_last_contacted: dateMs
         }
       })
     });
