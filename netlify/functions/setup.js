@@ -1,15 +1,23 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+// Only allow your app's origin to call this function.
+const ALLOWED_ORIGIN = 'https://richardsonoutdoorsolutions.com';
+
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    'Access-Control-Allow-Headers': 'Content-Type, x-app-secret',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
+  }
+
+  // ── AUTH GATE: reject anything without the shared secret ──
+  if (event.headers['x-app-secret'] !== process.env.APP_SHARED_SECRET) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'unauthorized' }) };
   }
 
   try {
@@ -24,10 +32,4 @@ exports.handler = async (event) => {
       customer: customerId,
       payment_method_types: ['card'],
       success_url: 'https://richardsonoutdoorsolutions.com/app?setup=success',
-      cancel_url: 'https://richardsonoutdoorsolutions.com/app?setup=cancel',
-    });
-    return { statusCode: 200, headers, body: JSON.stringify({ success: true, setupUrl: session.url, stripeCustomerId: customerId }) };
-  } catch (err) {
-    return { statusCode: 400, headers, body: JSON.stringify({ error: err.message }) };
-  }
-};
+      cancel_url: 'https://richardsonoutdoorsolution
